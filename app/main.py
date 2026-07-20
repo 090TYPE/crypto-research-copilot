@@ -3,9 +3,16 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
+from fastapi.concurrency import run_in_threadpool
 
 from app.llm.base import LLMProvider, get_provider
-from app.schemas import AskRawRequest, AskRawResponse, HealthResponse
+from app.schemas import (
+    AskRawRequest,
+    AskRawResponse,
+    HealthResponse,
+    IngestRequest,
+    IngestResponse,
+)
 
 app = FastAPI(
     title="Crypto Research Copilot",
@@ -27,3 +34,15 @@ async def ask_raw(req: AskRawRequest, provider: ProviderDep) -> AskRawResponse:
     """Ask the LLM directly, no RAG — smoke-test of the provider wiring."""
     answer = await provider.complete(req.prompt)
     return AskRawResponse(answer=answer, provider=provider.name)
+
+
+@app.post("/ingest", response_model=IngestResponse)
+async def ingest(req: IngestRequest) -> IngestResponse:
+    """Chunk + embed + store a document in Chroma. Returns chunk count."""
+    from app.rag.ingest import ingest_text
+
+    # Chroma/sentence-transformers are sync + CPU-bound: keep off the event loop.
+    count = await run_in_threadpool(
+        ingest_text, req.text, source=req.source, url=req.url, date=req.date
+    )
+    return IngestResponse(chunks_ingested=count)

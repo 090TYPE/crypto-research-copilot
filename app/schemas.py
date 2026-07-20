@@ -16,7 +16,18 @@ class AskRawResponse(BaseModel):
     provider: str
 
 
-# --- Filled in later stages (ingest / RAG / agent) ---
+class IngestRequest(BaseModel):
+    text: str = Field(..., min_length=1, description="Document/news body to ingest")
+    source: str = Field(..., min_length=1, description="Human-readable source name")
+    url: str | None = None
+    date: str | None = None
+
+
+class IngestResponse(BaseModel):
+    chunks_ingested: int
+
+
+# --- Filled in later stages (RAG / agent) ---
 
 
 class Source(BaseModel):
