@@ -50,7 +50,7 @@ uv run mypy app
 | Endpoint | Status | What |
 |---|---|---|
 | `GET /health` | ✅ | liveness |
-| `POST /ask-raw` | ⏳ | raw LLM, no RAG |
+| `POST /ask-raw` | ✅ | raw LLM, no RAG |
 | `POST /ingest` | ⏳ | chunk + embed + store |
 | `POST /ask` | ⏳ | RAG answer with citations |
 | `POST /agent` | ⏳ | agent + tools |
