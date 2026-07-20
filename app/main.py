@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from fastapi.concurrency import run_in_threadpool
 
+from app.errors import register_exception_handlers
 from app.llm.base import LLMProvider, get_provider
 from app.schemas import (
     AgentRequest,
@@ -22,6 +23,7 @@ app = FastAPI(
     description="RAG + agent copilot for crypto research.",
     version="0.1.0",
 )
+register_exception_handlers(app)
 
 # DI seam: routes depend on the LLMProvider interface, not a concrete backend.
 ProviderDep = Annotated[LLMProvider, Depends(get_provider)]

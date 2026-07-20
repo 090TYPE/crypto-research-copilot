@@ -27,6 +27,8 @@ async def test_answer_grounds_prompt_and_returns_sources() -> None:
     assert resp.answer == "FAKE ANSWER"
     assert resp.sources
     assert resp.sources[0].source == "zephyr-news"
+    assert resp.confidence is not None
+    assert 0.0 <= resp.confidence <= 1.0
     # Grounding: retrieved context must be injected into the LLM prompt.
     assert fake.last_prompt is not None
     assert "5% yield" in fake.last_prompt

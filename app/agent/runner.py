@@ -42,7 +42,7 @@ async def run_agent(question: str) -> AskResponse:
     async def news_tool(query: str) -> str:
         """Search ingested crypto news/docs for context relevant to the query."""
         hits = _retrieve(query)
-        for doc, meta in hits:
+        for doc, meta, _dist in hits:
             collected.append(Source(text=doc, source=meta.get("source"), url=meta.get("url")))
         return _build_context(hits) or "No relevant documents found."
 

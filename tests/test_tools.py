@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import httpx
 import pytest
 
 from app.agent import tools
@@ -63,3 +64,24 @@ async def test_calc_indicator_bad_kind(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(tools, "get_price_history", fake_history)
     with pytest.raises(ValueError):
         await tools.calc_indicator("bitcoin", kind="macd")
+
+
+async def test_get_json_retries_transient_then_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"n": 0}
+
+    class _FlakyClient(_FakeClient):
+        async def get(self, url: str, params: dict[str, Any] | None = None) -> _FakeResponse:
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise httpx.ConnectError("transient")
+            return _FakeResponse({"bitcoin": {"usd": 1.0}})
+
+    async def _no_sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(tools.httpx, "AsyncClient", lambda **kw: _FlakyClient({}))
+    monkeypatch.setattr(tools.asyncio, "sleep", _no_sleep)
+
+    price = await tools.get_price("bitcoin")
+    assert price == 1.0
+    assert calls["n"] == 3  # two failures retried, third succeeded
