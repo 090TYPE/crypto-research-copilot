@@ -108,6 +108,19 @@ curl -X POST localhost:8000/agent -H "content-type: application/json" -d '{
 Errors are structured: bad input → 422/400, dead upstream (CoinGecko) → 502,
 never a leaked traceback.
 
+## Web UI (Streamlit)
+
+A small Streamlit front-end talks to the running backend over HTTP — tabs for
+**Ask (RAG)**, **Agent**, and **Ingest**, showing answers, citations, confidence,
+and which tools the agent used.
+
+```bash
+uv run uvicorn app.main:app                       # backend on :8000
+uv run --extra ui streamlit run app/ui/streamlit_app.py   # UI on :8501
+```
+
+Point the UI at another backend with `API_BASE_URL`.
+
 ## Evaluation
 
 A lightweight RAG eval harness (LLM-as-judge + embedding metrics, no external
