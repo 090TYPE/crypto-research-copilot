@@ -1,4 +1,6 @@
-# app + ollama. Chroma runs embedded (persistent dir) inside the app for MVP.
+# One command: `docker compose up`.
+# Ollama auto-pulls the model on first boot; the app waits until it's ready.
+# Chroma runs embedded (persistent dir) inside the app for the MVP.
 services:
   app:
     build: .
@@ -12,7 +14,8 @@ services:
     volumes:
       - ./data:/data
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
 
   ollama:
     image: ollama/ollama:latest
@@ -20,6 +23,21 @@ services:
       - "11434:11434"
     volumes:
       - ollama:/root/.ollama
+    # Serve in the background, then pull the model. Healthcheck goes green only
+    # once the model is present, so the app doesn't start against an empty server.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        ollama serve &
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull llama3.1
+        wait
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list | grep -q llama3.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 120
+      start_period: 30s
 
 volumes:
   ollama:
