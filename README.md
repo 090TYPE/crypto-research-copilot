@@ -1,7 +1,6 @@
 # Crypto Research Copilot
 
-<!-- Replace OWNER with your GitHub username once pushed. -->
-[![CI](https://github.com/OWNER/crypto-research-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/crypto-research-copilot/actions/workflows/ci.yml)
+[![CI](https://github.com/090TYPE/crypto-research-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/090TYPE/crypto-research-copilot/actions/workflows/ci.yml)
 
 RAG + agent copilot for crypto research. Ingest news/docs, ask questions and get
 answers **with source citations** (RAG), and let an **agent** call tools
