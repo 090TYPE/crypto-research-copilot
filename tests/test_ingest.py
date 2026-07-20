@@ -1,12 +1,8 @@
 """Stage 2 ingest tests. Integration test hits real Chroma in a temp dir
 (downloads the embedding model on first run) — needs the `ai` extra installed."""
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
-from app.config import get_settings
 from app.rag.ingest import chunk_text, get_collection, ingest_text
 
 pytest.importorskip("chromadb")
@@ -22,14 +18,6 @@ def test_chunk_text_splits_and_drops_blanks() -> None:
 
 def test_chunk_text_empty() -> None:
     assert chunk_text("   ") == []
-
-
-@pytest.fixture
-def temp_chroma(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
-    monkeypatch.setenv("CHROMA_PATH", str(tmp_path / "chroma"))
-    get_settings.cache_clear()
-    yield
-    get_settings.cache_clear()
 
 
 @pytest.mark.usefixtures("temp_chroma")

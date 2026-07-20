@@ -30,6 +30,10 @@ class IngestResponse(BaseModel):
 # --- Filled in later stages (RAG / agent) ---
 
 
+class AskRequest(BaseModel):
+    question: str = Field(..., min_length=1, description="Question to answer from the RAG store")
+
+
 class Source(BaseModel):
     text: str
     source: str | None = None

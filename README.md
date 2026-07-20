@@ -52,7 +52,7 @@ uv run mypy app
 | `GET /health` | ✅ | liveness |
 | `POST /ask-raw` | ✅ | raw LLM, no RAG |
 | `POST /ingest` | ✅ | chunk + embed + store |
-| `POST /ask` | ⏳ | RAG answer with citations |
+| `POST /ask` | ✅ | RAG answer with citations |
 | `POST /agent` | ⏳ | agent + tools |
 
 ## Layout

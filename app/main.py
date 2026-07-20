@@ -9,6 +9,8 @@ from app.llm.base import LLMProvider, get_provider
 from app.schemas import (
     AskRawRequest,
     AskRawResponse,
+    AskRequest,
+    AskResponse,
     HealthResponse,
     IngestRequest,
     IngestResponse,
@@ -46,3 +48,11 @@ async def ingest(req: IngestRequest) -> IngestResponse:
         ingest_text, req.text, source=req.source, url=req.url, date=req.date
     )
     return IngestResponse(chunks_ingested=count)
+
+
+@app.post("/ask", response_model=AskResponse)
+async def ask(req: AskRequest, provider: ProviderDep) -> AskResponse:
+    """RAG answer: retrieve top-k context, then answer grounded with citations."""
+    from app.rag.retrieve import answer_question
+
+    return await answer_question(req.question, provider=provider)
