@@ -108,6 +108,24 @@ curl -X POST localhost:8000/agent -H "content-type: application/json" -d '{
 Errors are structured: bad input → 422/400, dead upstream (CoinGecko) → 502,
 never a leaked traceback.
 
+## Evaluation
+
+A lightweight RAG eval harness (LLM-as-judge + embedding metrics, no external
+eval framework) scores the pipeline on a curated set:
+
+```bash
+uv run python -m app.evaluation.evaluate
+```
+```
+      faithfulness: 0.9     # answer grounded in retrieved context (LLM judge)
+  answer_relevancy: 0.833   # answer addresses the question (LLM judge)
+ answer_similarity: 0.719   # cosine(answer, ground truth) via embeddings
+  context_hit_rate: 1.0     # retrieval surfaced the expected source
+```
+
+The judge is the configured `LLMProvider`, so the same harness works against
+Ollama or a cloud model.
+
 ## Tests / lint
 
 ```bash
