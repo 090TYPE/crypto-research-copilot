@@ -7,6 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from app.llm.base import LLMProvider, get_provider
 from app.schemas import (
+    AgentRequest,
     AskRawRequest,
     AskRawResponse,
     AskRequest,
@@ -56,3 +57,11 @@ async def ask(req: AskRequest, provider: ProviderDep) -> AskResponse:
     from app.rag.retrieve import answer_question
 
     return await answer_question(req.question, provider=provider)
+
+
+@app.post("/agent", response_model=AskResponse)
+async def agent(req: AgentRequest) -> AskResponse:
+    """Tool-using agent: LLM picks among get_price, calc_indicator, search_news."""
+    from app.agent.runner import run_agent
+
+    return await run_agent(req.question)

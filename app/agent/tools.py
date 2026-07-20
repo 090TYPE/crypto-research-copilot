@@ -1,24 +1,47 @@
-"""Agent tools: live price + technical indicators.
+"""Agent tools: live price + technical indicators via CoinGecko (httpx, no key).
 
-`get_price` hits CoinGecko via httpx. `calc_indicator` reuses indicator logic
-(RSI/SMA) ported from StockAnalyzer. Wired into the agent in Stage 4.
+`symbol` is a CoinGecko coin id, e.g. "bitcoin", "ethereum".
+Pure math lives in `indicators.py`; here we fetch data and compute.
 """
 
 import httpx
 
-COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
+from app.agent.indicators import rsi, sma
+
+_BASE = "https://api.coingecko.com/api/v3"
+_TIMEOUT = 15.0
 
 
 async def get_price(symbol: str, *, vs: str = "usd") -> float:
-    """Return spot price for a CoinGecko coin id (e.g. 'bitcoin', 'ethereum')."""
+    """Spot price for a CoinGecko coin id."""
     params = {"ids": symbol, "vs_currencies": vs}
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.get(COINGECKO_URL, params=params)
+    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        resp = await client.get(f"{_BASE}/simple/price", params=params)
         resp.raise_for_status()
         data = resp.json()
+    if symbol not in data:
+        raise ValueError(f"unknown coin id: {symbol!r}")
     return float(data[symbol][vs])
 
 
-def calc_indicator(prices: list[float], *, kind: str = "sma", period: int = 14) -> float:
-    """Compute a simple indicator over a price series. Expanded in Stage 4."""
-    raise NotImplementedError("Stage 4: RSI/SMA indicators")
+async def get_price_history(symbol: str, *, days: int = 30, vs: str = "usd") -> list[float]:
+    """Daily closing prices for the last `days` days (oldest -> newest)."""
+    params = {"vs_currency": vs, "days": str(days), "interval": "daily"}
+    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        resp = await client.get(f"{_BASE}/coins/{symbol}/market_chart", params=params)
+        resp.raise_for_status()
+        data = resp.json()
+    # market_chart returns prices as [[timestamp_ms, price], ...]
+    return [float(point[1]) for point in data.get("prices", [])]
+
+
+async def calc_indicator(symbol: str, *, kind: str = "rsi", period: int = 14) -> float:
+    """Fetch history and compute an indicator. kind: 'rsi' or 'sma'."""
+    kind = kind.lower()
+    days = max(period * 2, 30)
+    prices = await get_price_history(symbol, days=days)
+    if kind == "sma":
+        return sma(prices, period)
+    if kind == "rsi":
+        return rsi(prices, period)
+    raise ValueError(f"unknown indicator: {kind!r} (use 'rsi' or 'sma')")

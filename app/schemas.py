@@ -34,6 +34,10 @@ class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, description="Question to answer from the RAG store")
 
 
+class AgentRequest(BaseModel):
+    question: str = Field(..., min_length=1, description="Question for the tool-using agent")
+
+
 class Source(BaseModel):
     text: str
     source: str | None = None

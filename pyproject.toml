@@ -19,6 +19,7 @@ dependencies = [
 ai = [
     "langchain>=0.3",
     "langchain-community>=0.3",
+    "langchain-ollama>=0.2",
     "chromadb>=0.5",
     "sentence-transformers>=3.3",
 ]
