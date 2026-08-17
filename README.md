@@ -7,8 +7,8 @@ answers **with source citations** (RAG), and let an **agent** call tools
 (`get_price`, `calc_indicator`) when a question needs live market data.
 
 Runs **fully local and free** on [Ollama](https://ollama.com) — no API key. The
-LLM provider sits behind a single `LLMProvider` interface, so switching to
-OpenAI/Claude is a one-line `.env` change.
+LLM provider sits behind a pluggable `LLMProvider` interface (Ollama by
+default), so cloud backends can be added without touching the app code.
 
 ## Stack
 
@@ -23,8 +23,8 @@ httpx · uv · ruff · mypy · pytest · Docker
             └───┬─────────────┬──────────────┬─────────┘
                 │             │              │
             LLMProvider   RAG pipeline    Agent (LangChain)
-            (Ollama /     split→embed     tools: get_price,
-             OpenAI)      →Chroma;        calc_indicator (httpx→CoinGecko),
+            (Ollama by    split→embed     tools: get_price,
+             default)     →Chroma;        calc_indicator (httpx→CoinGecko),
                 │         retrieve→cite   search_news (→RAG)
                 └─────────────┴──────────────┘
                           Ollama (llama3.1)
@@ -136,13 +136,13 @@ uv run python -m app.evaluation.evaluate
   context_hit_rate: 1.0     # retrieval surfaced the expected source
 ```
 
-The judge is the configured `LLMProvider`, so the same harness works against
-Ollama or a cloud model.
+The judge runs through the same `LLMProvider` interface, so the harness is not
+tied to a specific model.
 
 ## Tests / lint
 
 ```bash
-uv run pytest         # 25 tests (unit + Chroma integration; LLM/network mocked)
+uv run pytest         # 29 tests (unit + Chroma integration; LLM/network mocked)
 uv run ruff check .
 uv run mypy app
 ```
@@ -157,7 +157,7 @@ app/
   config.py      pydantic-settings, provider selection
   schemas.py     request/response models
   errors.py      global exception handlers
-  llm/           LLMProvider interface + ollama/openai
+  llm/           LLMProvider interface + ollama (openai stub)
   rag/           ingest (split+embed+store) + retrieve (cited answers)
   agent/         tools (price/indicator) + indicators (RSI/SMA) + runner
   sources/       news loader
@@ -165,5 +165,5 @@ tests/
 ```
 
 Portfolio project — a Python reimplementation of a C# AI-desk concept
-(FastAPI + LangChain + Chroma), with the LLM provider abstracted so it runs
-locally on Ollama or on a cloud API.
+(FastAPI + LangChain + Chroma), with the LLM provider abstracted behind a
+pluggable interface (Ollama by default).
